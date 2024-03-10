@@ -58,7 +58,8 @@ internal static class PayloadConverter
             IsTransient = protoMetric.IsTransient,
             MetaData = ConvertVersionBMetaData(protoMetric.MetaData),
             Name = protoMetric.Name ?? string.Empty,
-            Timestamp = protoMetric.Timestamp
+            Timestamp = protoMetric.Timestamp,
+            Properties = ConvertVersionBPropertySet(protoMetric.PropertySetValue)
         };
 
         var dataType = ConvertVersionBDataType((VersionBProtoBuf.DataType?)protoMetric.DataType);
@@ -122,9 +123,10 @@ internal static class PayloadConverter
             case VersionBDataTypeEnum.Template:
                 metric.SetValue(VersionBDataTypeEnum.Template, ConvertVersionBTemplate(protoMetric.TemplateValue));
                 break;
-            case VersionBDataTypeEnum.PropertySet:
-                metric.SetValue(VersionBDataTypeEnum.PropertySet, ConvertVersionBPropertySet(protoMetric.PropertySetValue));
-                break;
+            //ToDo: This should be moved out as a separate field (Properties)
+            //case VersionBDataTypeEnum.PropertySet:
+                //metric.SetValue(VersionBDataTypeEnum.PropertySet, ConvertVersionBPropertySet(protoMetric.PropertySetValue));
+                //break;
             case VersionBDataTypeEnum.Int8Array:
                 var int8Array = protoMetric.BytesValue.Select(b => (sbyte)b).ToArray();
                 metric.SetValue(VersionBDataTypeEnum.Int8Array, int8Array);
@@ -176,16 +178,15 @@ internal static class PayloadConverter
                 var dateTimeArray = PayloadHelper.GetArrayOfTFromBytes(protoMetric.BytesValue, BinaryPrimitives.ReadUInt64LittleEndian);
                 metric.SetValue(VersionBDataTypeEnum.DateTimeArray, dateTimeArray.Select(x => DateTimeOffset.FromUnixTimeMilliseconds((long)x)).ToArray());
                 break;
-                // Todo: What to do here?
-            case VersionBDataTypeEnum.PropertySetList:
+            // Todo: What to do here?
+            // This not needed, not on of the types of the metric value field as per the spec.
+            //case VersionBDataTypeEnum.PropertySetList:
             case VersionBDataTypeEnum.Unknown:
             default:
                 throw new ArgumentOutOfRangeException(nameof(protoMetric.DataType), protoMetric.DataType, "Unknown metric data type");
         }
-
         return metric;
     }
-
     /// <summary>
     /// Gets the version B ProtoBuf metric from the version B metric.
     /// </summary>
@@ -202,7 +203,8 @@ internal static class PayloadConverter
             IsTransient = metric.IsTransient,
             MetaData = ConvertVersionBMetaData(metric.MetaData),
             Name = metric.Name,
-            Timestamp = metric.Timestamp
+            Timestamp = metric.Timestamp,
+            PropertySetValue = ConvertVersionBPropertySet(metric.Properties)
         };
 
         switch (metric.DataType)
@@ -264,9 +266,10 @@ internal static class PayloadConverter
             case VersionBDataTypeEnum.Template:
                 protoMetric.TemplateValue = ConvertVersionBTemplate(metric.Value.ConvertOrDefaultTo<Template>());
                 break;
-            case VersionBDataTypeEnum.PropertySet:
-                protoMetric.PropertySetValue = ConvertVersionBPropertySet(metric.Value.ConvertOrDefaultTo<PropertySet>());
-                break;
+            //case VersionBDataTypeEnum.PropertySet:
+                //ToDo: This should be moved out as a separate field (properties)
+                //protoMetric.PropertySetValue = ConvertVersionBPropertySet(metric.Value.ConvertOrDefaultTo<PropertySet>());
+                //break;
             case VersionBDataTypeEnum.Int8Array:
                 protoMetric.BytesValue = (byte[]?)metric.Value ?? [];
                 break;
@@ -312,7 +315,8 @@ internal static class PayloadConverter
                     PayloadHelper.GetBytesFromArray(ulongArray, BinaryPrimitives.WriteUInt64LittleEndian);
                 break;
             // Todo: What to do here?
-            case VersionBDataTypeEnum.PropertySetList:
+            // This should be part of the property value field
+            //case VersionBDataTypeEnum.PropertySetList:
             case VersionBDataTypeEnum.Unknown:
             default:
                 throw new ArgumentOutOfRangeException(nameof(metric.DataType), metric.DataType, "Unknown metric data type");

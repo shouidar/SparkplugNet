@@ -93,6 +93,10 @@ public class Metric : ValueBaseVersionB, IMetric
     public MetaData? MetaData { get; set; }
 
     /// <summary>
+    /// 
+    /// </summary>
+    public PropertySet? Properties { get; set; } 
+    /// <summary>
     /// Gets the value.
     /// </summary>
     public override object? Value => base.Value ?? this.GetValue();
@@ -165,9 +169,10 @@ public class Metric : ValueBaseVersionB, IMetric
             case VersionBDataTypeEnum.Template:
                 this.ObjectValue = value.ConvertOrDefaultTo<Template>();
                 break;
-            case VersionBDataTypeEnum.PropertySet:
-                this.ObjectValue = value.ConvertOrDefaultTo<PropertySet>();
-                break;
+            // Not one of the types of the metric value field as per the spec.
+            //case VersionBDataTypeEnum.PropertySet:
+            //    this.ObjectValue = value.ConvertOrDefaultTo<PropertySet>();
+            //    break;
             case VersionBDataTypeEnum.Int8Array:
                 this.ObjectValue = value.ConvertOrDefaultTo<sbyte[]>();
                 break;
@@ -197,7 +202,6 @@ public class Metric : ValueBaseVersionB, IMetric
                 {
                     return this;
                 }
-
                 if (value is DateTimeOffset[] dateTimeOffsets)
                 {
                     this.ObjectValue = dateTimeOffsets.Select(d => (ulong)MetricTimeValue.GetMilliSeconds(d)).ToArray();
@@ -235,13 +239,12 @@ public class Metric : ValueBaseVersionB, IMetric
                 this.ObjectValue = value.ConvertOrDefaultTo<string[]>();
                 break;
             // Todo: What to do here?
-            case VersionBDataTypeEnum.PropertySetList:
-                break;
+            //case VersionBDataTypeEnum.PropertySetList:
+            //    break;
             case VersionBDataTypeEnum.Unknown:
             default:
                 break;
         }
-
         return this;
     }
 

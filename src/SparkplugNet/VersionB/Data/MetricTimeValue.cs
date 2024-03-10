@@ -1,9 +1,7 @@
 ﻿namespace SparkplugNet.VersionB.Data;
 
-using System.Runtime.CompilerServices;
-
 /// <summary>
-/// Class to store metric time values. and perform operations on them.
+/// Static helper class to validate DateTime Values.
 /// </summary>
 public static class MetricTimeValue
 {
@@ -17,20 +15,20 @@ public static class MetricTimeValue
         switch (value)
         {
             case DateTime dateTime:
-                return (dateTime.Kind != DateTimeKind.Utc)
+                return dateTime.Kind != DateTimeKind.Utc
                     ? throw new InvalidOperationException("DateTime value must be in UTC")
                     : (ulong)new DateTimeOffset(dateTime).ToUnixTimeMilliseconds(); 
 
             case DateTimeOffset dateTimeOffset:
-                return (dateTimeOffset.Offset != TimeSpan.Zero) 
+                return dateTimeOffset.Offset != TimeSpan.Zero
                     ? throw new InvalidOperationException("DateTime value must be in UTC") 
                     : (ulong)dateTimeOffset.ToUnixTimeMilliseconds();
             
             case ulong :
             case long:
-                long longValue = value.ConvertTo<long>();
+                var longValue = value.ConvertTo<long>();
                 if (longValue> DateTimeOffset.MaxValue.ToUnixTimeMilliseconds() 
-                    || (longValue < DateTimeOffset.MinValue.ToUnixTimeMilliseconds()))
+                    || longValue < DateTimeOffset.MinValue.ToUnixTimeMilliseconds())
                 {
                     throw new InvalidOperationException("Value out of range");
                 }
@@ -49,4 +47,3 @@ public static class MetricTimeValue
         return DateTimeOffset.FromUnixTimeMilliseconds((long)GetMilliSeconds(value));
     }
 }
-
